@@ -1,0 +1,14 @@
+Open Questions
+
+1. Should the output default to horizontal layout for exactly 2 videos and grid otherwise?
+--- Horizonal should be assumed unless stated otherwise. Even 3 or more clips should still be horizontal.
+2. Should clips without enough pre/post footage be padded with black, frozen frame, or trimmed away?
+--- I think so. Could We add options for fade ins? There will be one main video and supporting video should be trimmed or fades attached.
+--- Also, there might need to be some syntax to have manditory trims.
+3. Should audio be disabled by default to avoid surprising mixes?
+--- Main video should keep audio but options for audio alteration or adding in music should be available
+4. Do we want to support more than one video file per bundle in the future?
+--- Yes
+5. Should `preferred_direction` be a hard constraint or a strong preference?
+   Recommendation for v1: hard constraint with explicit conflict errors.
+--- sure
