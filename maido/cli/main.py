@@ -2,10 +2,10 @@ import argparse
 import json
 import os
 
-from maido.bundle.inspection import inspect_bundle_path
-from maido.bundle.packing import pack_bundle
-from maido.manifest.template import build_manifest_data, write_manifest_file
-from maido.security.errors import MaidoError
+from ..bundle.inspection import inspect_bundle_path
+from ..bundle.packing import pack_bundle
+from ..manifest.template import build_manifest_data, write_manifest_file
+from ..security.errors import MaidoError
 
 
 def build_parser():
@@ -31,6 +31,8 @@ def build_parser():
     init_parser.add_argument("--center-y", type=float, help="optional crop center y")
     init_parser.add_argument("--min-width", type=float, help="optional minimum width")
     init_parser.add_argument("--min-height", type=float, help="optional minimum height")
+    init_parser.add_argument("--max-width", type=float, help="optional maximum width")
+    init_parser.add_argument("--max-height", type=float, help="optional maximum height")
     init_parser.add_argument(
         "--preferred-direction",
         choices=["left", "right", "up", "down"],
@@ -105,7 +107,8 @@ def _run_bundle_init(args):
             raise MaidoError("video file does not exist", path=args.video_path)
 
         center = _build_center_argument(args.center_x, args.center_y)
-        min_dimensions = _build_min_dimensions_argument(args.min_width, args.min_height)
+        min_dimensions = _build_dimensions_argument(args.min_width, args.min_height)
+        max_dimensions = _build_dimensions_argument(args.max_width, args.max_height)
         output_path = args.output or os.path.join(
             os.path.dirname(os.path.abspath(args.video_path)),
             "maido.json",
@@ -123,6 +126,7 @@ def _run_bundle_init(args):
             label=args.label,
             center=center,
             min_dimensions=min_dimensions,
+            max_dimensions=max_dimensions,
             preferred_direction=args.preferred_direction,
             notes=args.notes,
             tags=args.tags,
@@ -175,10 +179,10 @@ def _build_center_argument(center_x, center_y):
     return {"x": center_x, "y": center_y}
 
 
-def _build_min_dimensions_argument(min_width, min_height):
-    if min_width is None and min_height is None:
+def _build_dimensions_argument(width, height):
+    if width is None and height is None:
         return None
-    return {"width": min_width, "height": min_height}
+    return {"width": width, "height": height}
 
 
 def _format_inspection_report(report):
@@ -209,6 +213,13 @@ def _format_inspection_report(report):
         lines.append(
             "Minimum dimensions: "
             f"width={min_dimensions.get('width')}, height={min_dimensions.get('height')}"
+        )
+
+    if manifest.get("max_dimensions"):
+        max_dimensions = manifest["max_dimensions"]
+        lines.append(
+            "Maximum dimensions: "
+            f"width={max_dimensions.get('width')}, height={max_dimensions.get('height')}"
         )
 
     if manifest.get("preferred_direction"):
