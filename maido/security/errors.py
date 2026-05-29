@@ -30,3 +30,7 @@ class ManifestValidationError(MaidoError):
 
 class VideoProbeError(MaidoError):
     category = "video_probe_error"
+
+
+class CropConflictError(MaidoError):
+    category = "crop_conflict_error"
