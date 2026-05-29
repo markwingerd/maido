@@ -1,14 +1,14 @@
 import os
 import zipfile
 
-from maido.manifest.schema import (
+from ..manifest.schema import (
     load_manifest_file,
     validate_manifest,
     validate_manifest_against_probe,
 )
-from maido.probe.video import probe_video_file
-from maido.security.archive import ALLOWED_VIDEO_EXTENSIONS, MANIFEST_FILENAME
-from maido.security.errors import MaidoError, ManifestValidationError
+from ..probe.video import probe_video_file
+from ..security.archive import ALLOWED_VIDEO_EXTENSIONS, MANIFEST_FILENAME
+from ..security.errors import MaidoError, ManifestValidationError
 
 
 def pack_bundle(

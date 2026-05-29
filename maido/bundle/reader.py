@@ -1,7 +1,7 @@
 import tempfile
 from contextlib import contextmanager
 
-from maido.security.archive import extract_validated_zip, inspect_zip_file
+from ..security.archive import extract_validated_zip, inspect_zip_file
 
 
 @contextmanager

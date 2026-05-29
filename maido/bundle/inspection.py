@@ -1,11 +1,11 @@
-from maido.bundle.reader import open_bundle
-from maido.manifest.schema import (
+from ..manifest.schema import (
     load_manifest_file,
     validate_manifest,
     validate_manifest_against_probe,
 )
-from maido.probe.video import probe_video_file
-from maido.security.errors import ManifestValidationError
+from ..probe.video import probe_video_file
+from ..security.errors import ManifestValidationError
+from .reader import open_bundle
 
 
 def inspect_bundle_path(bundle_path, probe_file=None):
