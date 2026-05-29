@@ -30,6 +30,8 @@ class CliBundleCommandTests(unittest.TestCase):
                         "100",
                         "--center-y",
                         "200",
+                        "--max-width",
+                        "500",
                         "--output",
                         output_path,
                     ]
@@ -42,6 +44,9 @@ class CliBundleCommandTests(unittest.TestCase):
 
             self.assertEqual(manifest["video_file"], "source.mp4")
             self.assertEqual(manifest["center"], {"x": 100.0, "y": 200.0})
+            self.assertEqual(
+                manifest["max_dimensions"], {"width": 500.0, "height": None}
+            )
             self.assertIn("Wrote manifest:", stdout.getvalue())
 
     def test_bundle_init_rejects_partial_center(self):
@@ -69,6 +74,34 @@ class CliBundleCommandTests(unittest.TestCase):
                 "center requires both --center-x and --center-y", stdout.getvalue()
             )
 
+    def test_bundle_init_rejects_min_width_greater_than_max_width(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            video_path = os.path.join(temp_dir, "source.mp4")
+            with open(video_path, "wb") as handle:
+                handle.write(b"video-bytes")
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "bundle",
+                        "init",
+                        video_path,
+                        "--sync-point",
+                        "4.5",
+                        "--min-width",
+                        "600",
+                        "--max-width",
+                        "500",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn(
+                "min_dimensions.width cannot exceed max_dimensions.width",
+                stdout.getvalue(),
+            )
+
     def test_bundle_pack_creates_bundle_when_probe_succeeds(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             video_path = os.path.join(temp_dir, "source.mp4")
@@ -83,6 +116,7 @@ class CliBundleCommandTests(unittest.TestCase):
                         "version": "1",
                         "video_file": "source.mp4",
                         "sync_point_seconds": 4.5,
+                        "max_dimensions": {"width": 500, "height": None},
                     },
                     handle,
                 )

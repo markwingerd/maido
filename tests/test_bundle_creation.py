@@ -16,12 +16,14 @@ class BundleCreationTests(unittest.TestCase):
             sync_point_seconds=4.5,
             center={"x": 100, "y": 200},
             min_dimensions={"width": None, "height": 150},
+            max_dimensions={"width": 500, "height": None},
             preferred_direction="right",
         )
 
         self.assertEqual(manifest["version"], "1")
         self.assertEqual(manifest["video_file"], "source.mp4")
         self.assertEqual(manifest["preferred_direction"], "right")
+        self.assertEqual(manifest["max_dimensions"], {"width": 500.0, "height": None})
 
     def test_pack_bundle_creates_inspectable_bundle(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -36,6 +38,7 @@ class BundleCreationTests(unittest.TestCase):
                 video_file=video_path,
                 sync_point_seconds=4.5,
                 center={"x": 200, "y": 300},
+                max_dimensions={"width": 700, "height": None},
             )
             write_manifest_file(manifest_path, manifest)
 
@@ -56,6 +59,9 @@ class BundleCreationTests(unittest.TestCase):
 
             report = inspect_bundle_path(output_path, probe_file=self._fake_probe)
             self.assertEqual(report["manifest"]["video_file"], "source.mp4")
+            self.assertEqual(
+                report["manifest"]["max_dimensions"], {"width": 700.0, "height": None}
+            )
             self.assertEqual(report["probe"]["duration_seconds"], 10.0)
 
     def test_pack_bundle_rejects_manifest_video_mismatch(self):
