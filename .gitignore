@@ -1,4 +1,5 @@
 videos/src/*
+!videos/src/ADD_VIDEOS_AND_JSON_HERE
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
