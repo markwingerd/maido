@@ -22,7 +22,7 @@ This is useful when you want to compare multiple recordings of the same event fr
 - validate that package safely
 - align multiple videos using a required sync point
 - automatically crop videos around an optional center point
-- respect optional minimum visible dimensions
+- respect optional minimum and maximum visible dimensions
 - place videos side by side or in a grid
 - render a final combined video
 - preserve only the core video's audio by default
@@ -91,6 +91,10 @@ Example `maido.json`:
     "width": null,
     "height": 200
   },
+  "max_dimensions": {
+    "width": 600,
+    "height": null
+  },
   "preferred_direction": "left"
 }
 ```
@@ -106,12 +110,14 @@ Example `maido.json`:
 - `label`
 - `center`
 - `min_dimensions`
+- `max_dimensions`
 - `preferred_direction`
 
 ### Notes
 - `sync_point_seconds` is required for every video
 - `center` helps choose the crop area
-- `min_dimensions` protects important visible source area
+- `min_dimensions` protects the minimum source area that must stay visible
+- `max_dimensions` limits how much source area the crop planner may keep visible
 - `preferred_direction` can request placement on `left`, `right`, `up`, or `down`
 
 ---

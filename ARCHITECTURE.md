@@ -50,6 +50,7 @@ All supporting videos must adapt themselves to the core timeline.
 - require a sync point for every source
 - support optional crop center hint
 - support optional minimum visible dimensions hint
+- support optional maximum visible dimensions hint
 - support optional preferred placement direction
 - provide a debug rendering mode to visualize metadata assumptions
 - package video + metadata together for portability
@@ -214,6 +215,7 @@ Responsibilities:
 Examples:
 - `sync_point_seconds` is mandatory
 - if `min_dimensions` is present, at least one of `width` or `height` must be present
+- if `max_dimensions` is present, at least one of `width` or `height` must be present
 - `preferred_direction` must be `left`, `right`, `up`, or `down`
 
 ### 9.3 Video Probe
@@ -278,6 +280,7 @@ Responsibilities:
 - choose the visible crop window for each clip
 - use `center` if provided
 - preserve minimum visible dimensions where possible
+- enforce maximum visible dimensions where requested
 - keep crop inside source bounds
 - work relative to the clip's assigned output cell
 
@@ -286,8 +289,9 @@ Recommended crop approach:
 2. start with source frame size
 3. center crop around user hint if present, otherwise source center
 4. preserve `min_dimensions` where possible
-5. clamp to source boundaries
-6. fail if constraints are impossible
+5. enforce `max_dimensions` where possible
+6. clamp to source boundaries
+7. fail if constraints are impossible
 
 ### 9.7 Renderer
 Responsibilities:

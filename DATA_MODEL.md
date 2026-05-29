@@ -87,6 +87,7 @@ Reason:
 |---|---|---:|---|
 | `center` | object | no | Crop center hint |
 | `min_dimensions` | object | no | Minimum visible source dimensions |
+| `max_dimensions` | object | no | Maximum visible source dimensions |
 | `preferred_direction` | string | no | `left`, `right`, `up`, or `down` |
 | `notes` | string | no | Freeform user note |
 | `tags` | array | no | Optional organizational labels |
@@ -141,7 +142,34 @@ Interpretation:
 
 ---
 
-## 5.3 `preferred_direction`
+## 5.3 `max_dimensions`
+
+Represents the maximum source-space content that should remain visible after cropping.
+
+Example:
+
+```json
+{
+  "width": 600,
+  "height": null
+}
+```
+
+Rules:
+- object is optional
+- if present, at least one of `width` or `height` must be present and non-null
+- provided values must be positive numbers
+- `null` is allowed for one side if the other side is provided
+- if both min and max are present for the same axis, `min` must not exceed `max`
+
+Interpretation:
+- these are source-space visibility constraints
+- they are not output resolution targets
+- they limit how much source area the crop planner may keep visible
+
+---
+
+## 5.4 `preferred_direction`
 
 Hard placement preference in the composed layout.
 
@@ -174,6 +202,10 @@ Rules:
     "width": null,
     "height": 200
   },
+  "max_dimensions": {
+    "width": 600,
+    "height": null
+  },
   "preferred_direction": "left"
 }
 ```
@@ -191,6 +223,9 @@ Rules:
 ## 7.2 Structural rules
 - `center` requires both `x` and `y`
 - `min_dimensions` requires at least one of `width` or `height`
+- `max_dimensions` requires at least one of `width` or `height`
+- `min_dimensions.width <= max_dimensions.width` when both are present
+- `min_dimensions.height <= max_dimensions.height` when both are present
 - `preferred_direction` must be one of `left`, `right`, `up`, `down`
 
 ## 7.3 Referential rules
@@ -204,6 +239,8 @@ After video inspection:
 - `center.y` must be within source height
 - `min_dimensions.width <= source_width` if provided
 - `min_dimensions.height <= source_height` if provided
+- `max_dimensions.width <= source_width` if provided
+- `max_dimensions.height <= source_height` if provided
 
 ## 7.5 Conflict rules
 Validation should fail on conditions such as:
@@ -373,6 +410,7 @@ Canonical v1 data model:
   - `label`
   - `center`
   - `min_dimensions`
+  - `max_dimensions`
   - `preferred_direction`
 - composition-level fields:
   - `core_input`
