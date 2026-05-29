@@ -1,6 +1,6 @@
 import importlib
 
-from maido.security.errors import VideoProbeError
+from ..security.errors import VideoProbeError
 
 
 def probe_video_file(path):
