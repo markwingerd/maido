@@ -260,14 +260,14 @@ This object is created by the CLI or library when composing multiple bundles.
 | `inputs` | array | yes | Bundle paths or loaded bundle objects |
 | `core_input` | string or integer | yes | Identifies which input is the core clip |
 | `output_file` | string | yes | Output path |
-| `layout_mode` | string | no | `auto`, `horizontal`, `grid` |
+| `layout_mode` | string | no | `horizontal`, `vertical` |
 | `audio_mode` | string | no | `core`, `mute`, `file` |
 | `audio_file` | string | no | Required when `audio_mode=file` |
 | `debug` | boolean | no | Render overlays if true |
 | `entry_fade_seconds` | number | no | Optional fade-in for delayed supporting clips |
 
 ### Default recommendations
-- `layout_mode = auto`
+- `layout_mode = horizontal`
 - `audio_mode = core`
 - `debug = false`
 - `entry_fade_seconds = 0` or a small fixed value such as `0.15`
@@ -332,7 +332,9 @@ Suggested fields:
 | `cell_y` | Output cell y |
 | `cell_width` | Output cell width |
 | `cell_height` | Output cell height |
-| `placement_direction` | Resolved placement |
+| `placement_direction` | Resolved placement (`left`, `right`, `up`, `down`, `center`) |
+| `preference_satisfied` | Whether the requested direction was satisfied |
+| `cell_index` | Slot index in the final sequence |
 | `debug_annotations` | Overlay instruction data |
 
 This is an internal data structure only.

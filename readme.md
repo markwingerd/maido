@@ -23,7 +23,7 @@ This is useful when you want to compare multiple recordings of the same event fr
 - align multiple videos using a required sync point
 - automatically crop videos around an optional center point
 - respect optional minimum and maximum visible dimensions
-- place videos side by side or in a grid
+- place videos in a horizontal row or vertical stack
 - render a final combined video
 - preserve only the core video's audio by default
 
@@ -165,6 +165,7 @@ maido compose a.maido.zip b.maido.zip c.maido.zip --core 0 --output final.mp4
 Planned options include:
 
 - selecting the core input
+- choosing `horizontal` or `vertical` layout
 - muting audio
 - replacing audio with an external file
 - enabling debug overlays

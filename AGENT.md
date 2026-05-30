@@ -173,6 +173,13 @@ The CLI should guide users through a straightforward workflow:
 2. inspect/debug a bundle
 3. compose multiple bundles around a chosen core video
 
+### Layout rules for v1
+- v1 supports only `horizontal` and `vertical` composition layouts
+- `horizontal` is the default layout mode
+- the core clip must be placed at index `(n - 1) // 2`
+- cross-axis preference contradictions must be explicit errors
+- same-side preference collisions should not error; resolve them deterministically using CLI order and remaining slot availability
+
 ### Validation errors must be actionable
 Bad:
 - `Invalid input`

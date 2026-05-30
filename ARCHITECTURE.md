@@ -259,21 +259,29 @@ This makes the core timeline authoritative and predictable.
 ### 9.5 Layout Planner
 Responsibilities:
 - determine where each clip appears in the output
-- honor optional directional placement rules
-- choose a stable layout for N videos
+- support only `horizontal` and `vertical` layout modes in v1
+- honor optional directional placement rules on the chosen axis
+- keep placement deterministic across repeated runs
 
-Recommended defaults:
-- 2 videos: side-by-side horizontal
-- 3–4 videos: compact grid
-- 5+ videos: stable grid
+V1 layout modes:
+- `horizontal` — default
+- `vertical`
+
+Core placement rule:
+- the core clip is always placed at index `(n - 1) // 2`
+- for odd counts, this centers the core clip
+- for even counts, this places the core clip just left of center in horizontal mode or just above center in vertical mode
 
 `preferred_direction` behavior:
-- `left`: prefer left-most slot
-- `right`: prefer right-most slot
-- `up`: prefer top-most slot
-- `down`: prefer bottom-most slot
+- horizontal mode accepts `left` and `right`
+- vertical mode accepts `up` and `down`
+- cross-axis preferences are explicit layout errors
+- same-side collisions are not errors; overflow is resolved by remaining slot availability and CLI order
 
-If multiple clips demand incompatible exclusive positions, the planner should fail clearly rather than guess.
+Overflow behavior:
+- preferred-side clips are placed first where possible
+- if a preferred side runs out of slots, remaining clips overflow into unfilled slots
+- overflow preserves CLI order rather than guessing or silently re-sorting inputs
 
 ### 9.6 Crop Planner
 Responsibilities:
@@ -380,7 +388,7 @@ Recommended command:
 - `maido compose a.maido.zip b.maido.zip c.maido.zip --core 0 --output combined.mp4`
 
 Useful options:
-- `--layout auto|horizontal|grid`
+- `--layout horizontal|vertical`
 - `--audio core|mute|file`
 - `--audio-file path/to/audio.mp3`
 - `--debug`
