@@ -46,3 +46,7 @@ class CompositionPlanError(MaidoError):
 
 class SyncConflictError(MaidoError):
     category = "sync_conflict_error"
+
+
+class RenderPlanError(MaidoError):
+    category = "render_plan_error"

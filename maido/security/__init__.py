@@ -7,6 +7,7 @@ from .errors import (
     MaidoError,
     ManifestParseError,
     ManifestValidationError,
+    RenderPlanError,
     SyncConflictError,
     VideoProbeError,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "MaidoError",
     "ManifestParseError",
     "ManifestValidationError",
+    "RenderPlanError",
     "SyncConflictError",
     "VideoProbeError",
     "inspect_zip_file",

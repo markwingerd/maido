@@ -4,6 +4,7 @@ from .composition import plan_composition
 from .crop import plan_crop, plan_crop_for_manifest
 from .layout import plan_layout
 from .manifest.template import build_manifest_data, write_manifest_file
+from .render import plan_render
 from .sync import plan_sync
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "plan_crop",
     "plan_crop_for_manifest",
     "plan_layout",
+    "plan_render",
     "plan_sync",
     "write_manifest_file",
 ]
