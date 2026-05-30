@@ -1,0 +1,120 @@
+from ..crop import plan_crop_for_manifest
+from ..layout import plan_layout
+from ..security.errors import CompositionPlanError
+
+
+
+def plan_composition(
+        clips,
+        core_input,
+        canvas_width,
+        canvas_height,
+        layout_mode="horizontal"):
+    normalized_clips = _normalize_composition_clips(clips)
+    layout_clips = []
+    for clip in normalized_clips:
+        layout_clips.append(
+            {
+                "bundle_id": clip["bundle_id"],
+                "preferred_direction": clip["manifest"].get("preferred_direction"),
+            }
+        )
+
+    layout_plan = plan_layout(
+        layout_clips,
+        core_input=core_input,
+        layout_mode=layout_mode,
+        canvas_width=canvas_width,
+        canvas_height=canvas_height,
+    )
+    clips_by_bundle_id = {}
+    for clip in normalized_clips:
+        clips_by_bundle_id[clip["bundle_id"]] = clip
+
+    planned_clips = []
+    for layout_entry in layout_plan:
+        clip = clips_by_bundle_id[layout_entry["bundle_id"]]
+        crop_plan = plan_crop_for_manifest(
+            clip["manifest"],
+            clip["probe"],
+            layout_entry["cell_width"],
+            layout_entry["cell_height"],
+        )
+        planned_clips.append(
+            {
+                "bundle_id": clip["bundle_id"],
+                "input_index": layout_entry["input_index"],
+                "role": layout_entry["role"],
+                "manifest": clip["manifest"],
+                "probe": clip["probe"],
+                "layout": layout_entry,
+                "crop": crop_plan,
+            }
+        )
+
+    return {
+        "layout_mode": layout_mode,
+        "core_input": core_input,
+        "canvas_width": float(canvas_width),
+        "canvas_height": float(canvas_height),
+        "clip_count": len(planned_clips),
+        "clips": planned_clips,
+    }
+
+
+
+def _normalize_composition_clips(clips):
+    if not isinstance(clips, list) or not clips:
+        raise CompositionPlanError("clips must be a non-empty list")
+
+    normalized = []
+    bundle_ids = set()
+    for index, clip in enumerate(clips):
+        if not isinstance(clip, dict):
+            raise CompositionPlanError(
+                "each composition clip must be an object",
+                input_index=index,
+            )
+
+        bundle_id = clip.get("bundle_id")
+        manifest = clip.get("manifest")
+        probe = clip.get("probe")
+
+        if not isinstance(bundle_id, str) or not bundle_id.strip():
+            raise CompositionPlanError(
+                "each composition clip must include a non-empty bundle_id",
+                input_index=index,
+            )
+        bundle_id = bundle_id.strip()
+        if bundle_id in bundle_ids:
+            raise CompositionPlanError(
+                "composition clip bundle_id values must be unique",
+                bundle_id=bundle_id,
+            )
+        bundle_ids.add(bundle_id)
+
+        if not isinstance(manifest, dict):
+            raise CompositionPlanError(
+                "each composition clip must include a manifest object",
+                bundle_id=bundle_id,
+            )
+        if not isinstance(probe, dict):
+            raise CompositionPlanError(
+                "each composition clip must include a probe object",
+                bundle_id=bundle_id,
+            )
+        if "width" not in probe or "height" not in probe:
+            raise CompositionPlanError(
+                "probe must include width and height",
+                bundle_id=bundle_id,
+            )
+
+        normalized.append(
+            {
+                "bundle_id": bundle_id,
+                "manifest": manifest,
+                "probe": probe,
+            }
+        )
+
+    return normalized
