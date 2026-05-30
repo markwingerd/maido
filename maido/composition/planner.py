@@ -56,6 +56,7 @@ def plan_composition(
                 "bundle_id": clip["bundle_id"],
                 "input_index": layout_entry["input_index"],
                 "role": layout_entry["role"],
+                "source_path": clip["source_path"],
                 "manifest": clip["manifest"],
                 "probe": clip["probe"],
                 "sync": sync_by_bundle_id[clip["bundle_id"]],
@@ -92,6 +93,7 @@ def _normalize_composition_clips(clips):
             )
 
         bundle_id = clip.get("bundle_id")
+        source_path = clip.get("source_path")
         manifest = clip.get("manifest")
         probe = clip.get("probe")
 
@@ -124,9 +126,18 @@ def _normalize_composition_clips(clips):
                 bundle_id=bundle_id,
             )
 
+        if source_path is not None:
+            if not isinstance(source_path, str) or not source_path.strip():
+                raise CompositionPlanError(
+                    "source_path must be a non-empty string when provided",
+                    bundle_id=bundle_id,
+                )
+            source_path = source_path.strip()
+
         normalized.append(
             {
                 "bundle_id": bundle_id,
+                "source_path": source_path,
                 "manifest": manifest,
                 "probe": probe,
             }
