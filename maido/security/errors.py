@@ -34,3 +34,7 @@ class VideoProbeError(MaidoError):
 
 class CropConflictError(MaidoError):
     category = "crop_conflict_error"
+
+
+class LayoutConflictError(MaidoError):
+    category = "layout_conflict_error"
