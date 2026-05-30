@@ -38,3 +38,7 @@ class CropConflictError(MaidoError):
 
 class LayoutConflictError(MaidoError):
     category = "layout_conflict_error"
+
+
+class CompositionPlanError(MaidoError):
+    category = "composition_plan_error"

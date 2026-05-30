@@ -1,6 +1,7 @@
 from .archive import extract_validated_zip, inspect_zip_file
 from .errors import (
     ArchiveError,
+    CompositionPlanError,
     CropConflictError,
     LayoutConflictError,
     MaidoError,
@@ -11,6 +12,7 @@ from .errors import (
 
 __all__ = [
     "ArchiveError",
+    "CompositionPlanError",
     "CropConflictError",
     "LayoutConflictError",
     "MaidoError",
