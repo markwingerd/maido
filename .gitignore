@@ -1,5 +1,8 @@
 videos/src/*
+videos/output/*
 !videos/src/ADD_VIDEOS_AND_JSON_HERE
+!videos/output/VIDEOS_OUTPUT_HERE
+smoke_test/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

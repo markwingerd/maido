@@ -5,6 +5,7 @@ from maido.render import plan_render, render_plan_to_file
 from maido.security.errors import RenderExecutionError
 
 
+
 def _require_last_write(fake_api):
     if fake_api.last_write is None:
         raise AssertionError("expected a render write record")
@@ -63,6 +64,7 @@ class RenderExecutorTests(unittest.TestCase):
         self.assertEqual(last_write["audio_codec"], "aac")
         self.assertEqual(last_write["clip_count"], 3)
         self.assertEqual(fake_api.composite_audio_file, None)
+        self.assertEqual(fake_api.fadein_durations, [0.2])
 
     def test_render_plan_to_file_supports_external_audio(self):
         composition_plan = plan_composition(
@@ -96,6 +98,7 @@ class RenderExecutorTests(unittest.TestCase):
         self.assertEqual(last_write["fps"], 24.0)
         self.assertEqual(fake_api.composite_audio_file, "music.mp3")
         self.assertEqual(fake_api.background_color, (0, 0, 0))
+        self.assertEqual(fake_api.last_audio_subclip, (0, 10.0))
 
     def test_render_plan_to_file_rejects_missing_fields(self):
         with self.assertRaises(RenderExecutionError):
@@ -104,10 +107,12 @@ class RenderExecutorTests(unittest.TestCase):
 
 class FakeMoviePyApi:
     def __init__(self, audio_duration=5.0):
-        self.vfx = FakeVfx()
+        self.vfx = FakeVfx(self)
         self.background_color = None
         self.last_write = None
         self.composite_audio_file = None
+        self.fadein_durations = []
+        self.last_audio_subclip = None
         self._audio_duration = audio_duration
 
     def ColorClip(self, size, color):
@@ -125,8 +130,18 @@ class FakeMoviePyApi:
 
 
 class FakeVfx:
-    def fadein(self, clip, duration):
-        return clip
+    def __init__(self, api):
+        self._api = api
+
+    def FadeIn(self, duration):
+        self._api.fadein_durations.append(duration)
+        return FakeEffect("FadeIn", duration)
+
+
+class FakeEffect:
+    def __init__(self, name, duration):
+        self.name = name
+        self.duration = duration
 
 
 class FakeClip:
@@ -135,32 +150,33 @@ class FakeClip:
         self.source_path = source_path
         self.duration = duration
         self.audio_removed = False
+        self.audio = None
 
-    def set_duration(self, duration):
+    def with_duration(self, duration):
         self.duration = duration
         return self
 
-    def subclip(self, start, end):
+    def subclipped(self, start, end):
         self.subclip_range = (start, end)
         return self
 
-    def crop(self, x1, y1, x2, y2):
+    def cropped(self, x1, y1, x2, y2):
         self.crop_box = (x1, y1, x2, y2)
         return self
 
-    def resize(self, newsize):
-        self.newsize = newsize
+    def resized(self, new_size):
+        self.newsize = new_size
         return self
 
-    def fx(self, effect, duration):
-        self.fade_duration = duration
-        return effect(self, duration)
+    def with_effects(self, effects):
+        self.effects = effects
+        return self
 
-    def set_start(self, start):
+    def with_start(self, start):
         self.start = start
         return self
 
-    def set_position(self, position):
+    def with_position(self, position):
         self.position = position
         return self
 
@@ -168,7 +184,7 @@ class FakeClip:
         self.audio_removed = True
         return self
 
-    def set_audio(self, audio):
+    def with_audio(self, audio):
         self.audio = audio
         return self
 
@@ -177,7 +193,10 @@ class FakeClip:
 
 
 class FakeAudioClip(FakeClip):
-    pass
+    def subclipped(self, start, end):
+        self.api.last_audio_subclip = (start, end)
+        self.subclip_range = (start, end)
+        return self
 
 
 class FakeCompositeClip(FakeClip):
@@ -186,7 +205,7 @@ class FakeCompositeClip(FakeClip):
         self._clips = clips
         self.size = size
 
-    def set_audio(self, audio):
+    def with_audio(self, audio):
         self.api.composite_audio_file = audio.source_path
         self.audio = audio
         return self

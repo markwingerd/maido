@@ -18,6 +18,8 @@ def plan_crop(
 
     lower_width = 0.0
     upper_width = min(source_width, source_height * target_aspect_ratio)
+    # print(f"{target_aspect_ratio=} = {cell_width=} / {cell_height=}")
+    # print(f"{upper_width=}= min({source_width=}, {source_height=} * {target_aspect_ratio=})")
 
     min_width = min_dimensions.get("width")
     min_height = min_dimensions.get("height")
@@ -36,7 +38,7 @@ def plan_crop(
 
     if lower_width > upper_width:
         raise CropConflictError(
-            "crop constraints cannot satisfy the target aspect ratio",
+            f"crop constraints cannot satisfy the target aspect ratio - {lower_width=} > {upper_width=}",
             source_width=source_width,
             source_height=source_height,
             cell_width=cell_width,

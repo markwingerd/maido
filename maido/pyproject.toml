@@ -9,7 +9,7 @@ description = "Core-video-anchored multi-video composition tooling"
 readme = "readme.md"
 requires-python = ">=3.10"
 dependencies = [
-    "moviepy>=1.0.3,<2"
+    "moviepy>=2,<3"
 ]
 
 [project.scripts]

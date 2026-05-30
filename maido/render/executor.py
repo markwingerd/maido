@@ -35,37 +35,36 @@ def render_plan_to_file(
     external_audio_clip = None
     try:
         background_clip = api.ColorClip(canvas_size, color=background_color)
-        background_clip = background_clip.set_duration(output_duration_seconds)
+        background_clip = background_clip.with_duration(output_duration_seconds)
         managed_clips.append(background_clip)
         video_layers = [background_clip]
 
         for instruction in normalized_plan["clips"]:
             source_clip = api.VideoFileClip(instruction["source_path"])
             managed_clips.append(source_clip)
-            layer_clip = source_clip.subclip(
+            layer_clip = source_clip.subclipped(
                 instruction["trim_start_seconds"],
                 instruction["trim_end_seconds"],
             )
             managed_clips.append(layer_clip)
-            layer_clip = layer_clip.crop(
+            layer_clip = layer_clip.cropped(
                 x1=instruction["crop_x"],
                 y1=instruction["crop_y"],
                 x2=instruction["crop_x"] + instruction["crop_width"],
                 y2=instruction["crop_y"] + instruction["crop_height"],
             )
-            layer_clip = layer_clip.resize(
-                newsize=(
+            layer_clip = layer_clip.resized(
+                new_size=(
                     int(round(instruction["cell_width"])),
                     int(round(instruction["cell_height"])),
                 )
             )
             if instruction["applied_entry_fade_seconds"] > 0:
-                layer_clip = layer_clip.fx(
-                    api.vfx.fadein,
-                    instruction["applied_entry_fade_seconds"],
+                layer_clip = layer_clip.with_effects(
+                    [api.vfx.FadeIn(instruction["applied_entry_fade_seconds"])]
                 )
-            layer_clip = layer_clip.set_start(instruction["output_start_seconds"])
-            layer_clip = layer_clip.set_position(
+            layer_clip = layer_clip.with_start(instruction["output_start_seconds"])
+            layer_clip = layer_clip.with_position(
                 (instruction["cell_x"], instruction["cell_y"])
             )
             if not instruction["render_audio"]:
@@ -74,7 +73,7 @@ def render_plan_to_file(
             managed_clips.append(layer_clip)
 
         composite_clip = api.CompositeVideoClip(video_layers, size=canvas_size)
-        composite_clip = composite_clip.set_duration(output_duration_seconds)
+        composite_clip = composite_clip.with_duration(output_duration_seconds)
 
         if normalized_plan["audio"]["mode"] == "mute":
             composite_clip = _remove_audio(composite_clip)
@@ -86,8 +85,8 @@ def render_plan_to_file(
                 isinstance(audio_duration_seconds, (int, float))
                 and audio_duration_seconds > output_duration_seconds
             ):
-                external_audio_clip = external_audio_clip.subclip(0, output_duration_seconds)
-            composite_clip = composite_clip.set_audio(external_audio_clip)
+                external_audio_clip = external_audio_clip.subclipped(0, output_duration_seconds)
+            composite_clip = composite_clip.with_audio(external_audio_clip)
 
         composite_clip.write_videofile(
             normalized_output_path,
@@ -124,18 +123,20 @@ def render_plan_to_file(
 
 def _load_moviepy_api():
     try:
-        editor = importlib.import_module("moviepy.editor")
-        vfx = importlib.import_module("moviepy.video.fx.all")
+        moviepy_module = importlib.import_module("moviepy")
+        vfx = getattr(moviepy_module, "vfx", None)
+        if vfx is None:
+            vfx = importlib.import_module("moviepy.video.fx")
     except ImportError as error:
         raise RenderExecutionError(
             "moviepy is not installed; install project dependencies before rendering"
         ) from error
 
     return _MoviePyApi(
-        ColorClip=editor.ColorClip,
-        VideoFileClip=editor.VideoFileClip,
-        CompositeVideoClip=editor.CompositeVideoClip,
-        AudioFileClip=editor.AudioFileClip,
+        ColorClip=moviepy_module.ColorClip,
+        VideoFileClip=moviepy_module.VideoFileClip,
+        CompositeVideoClip=moviepy_module.CompositeVideoClip,
+        AudioFileClip=moviepy_module.AudioFileClip,
         vfx=vfx,
     )
 
@@ -221,6 +222,8 @@ def _coerce_background_color(background_color):
 def _remove_audio(clip):
     if hasattr(clip, "without_audio"):
         return clip.without_audio()
+    if hasattr(clip, "with_audio"):
+        return clip.with_audio(None)
     if hasattr(clip, "set_audio"):
         return clip.set_audio(None)
     return clip
@@ -233,7 +236,9 @@ def _close_if_possible(resource):
 
 
 class _MoviePyApi:
-    def __init__(self, ColorClip, VideoFileClip, CompositeVideoClip, AudioFileClip, vfx):
+    def __init__(
+            self, ColorClip, VideoFileClip, CompositeVideoClip,
+            AudioFileClip, vfx):
         self.ColorClip = ColorClip
         self.VideoFileClip = VideoFileClip
         self.CompositeVideoClip = CompositeVideoClip
