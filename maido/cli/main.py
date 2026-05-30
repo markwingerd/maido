@@ -4,6 +4,7 @@ import os
 
 from ..bundle.inspection import inspect_bundle_path
 from ..bundle.packing import pack_bundle
+from ..composition import compose_bundles_to_file
 from ..manifest.template import build_manifest_data, write_manifest_file
 from ..security.errors import MaidoError
 
@@ -83,7 +84,82 @@ def build_parser():
         help="print the inspection result as JSON",
     )
 
+    compose_parser = subparsers.add_parser(
+        "compose",
+        help="compose multiple bundles into a final output video",
+    )
+    compose_parser.add_argument(
+        "bundle_paths",
+        nargs="+",
+        help="input bundle paths in CLI order",
+    )
+    compose_parser.add_argument(
+        "--core",
+        required=True,
+        type=int,
+        help="0-based index of the core bundle in the input list",
+    )
+    compose_parser.add_argument(
+        "--output",
+        required=True,
+        help="path to the output video file",
+    )
+    compose_parser.add_argument(
+        "--canvas-width",
+        required=True,
+        type=float,
+        help="output canvas width in pixels",
+    )
+    compose_parser.add_argument(
+        "--canvas-height",
+        required=True,
+        type=float,
+        help="output canvas height in pixels",
+    )
+    compose_parser.add_argument(
+        "--layout",
+        choices=["horizontal", "vertical"],
+        default="horizontal",
+        help="composition layout mode",
+    )
+    compose_parser.add_argument(
+        "--audio",
+        choices=["core", "mute", "file"],
+        default="core",
+        help="output audio mode",
+    )
+    compose_parser.add_argument(
+        "--audio-file",
+        help="external audio file used when --audio file is selected",
+    )
+    compose_parser.add_argument(
+        "--entry-fade-seconds",
+        type=float,
+        default=0.0,
+        help="fade-in duration for delayed supporting clips",
+    )
+    compose_parser.add_argument(
+        "--background-color",
+        help="background color name or #RRGGBB value",
+    )
+    compose_parser.add_argument(
+        "--fps",
+        type=float,
+        help="output frames per second",
+    )
+    compose_parser.add_argument(
+        "--codec",
+        default="libx264",
+        help="video codec passed to MoviePy",
+    )
+    compose_parser.add_argument(
+        "--audio-codec",
+        default="aac",
+        help="audio codec passed to MoviePy",
+    )
+
     return parser
+
 
 
 def main(argv=None):
@@ -96,9 +172,12 @@ def main(argv=None):
         return _run_bundle_pack(args)
     if args.command == "bundle" and args.bundle_command == "inspect":
         return _run_bundle_inspect(args)
+    if args.command == "compose":
+        return _run_compose(args)
 
     parser.print_help()
     return 1
+
 
 
 def _run_bundle_init(args):
@@ -140,6 +219,7 @@ def _run_bundle_init(args):
     return 0
 
 
+
 def _run_bundle_pack(args):
     try:
         result = pack_bundle(
@@ -154,6 +234,7 @@ def _run_bundle_pack(args):
 
     print(f"Created bundle: {result['bundle_path']}")
     return 0
+
 
 
 def _run_bundle_inspect(args):
@@ -171,6 +252,37 @@ def _run_bundle_inspect(args):
     return 0
 
 
+
+def _run_compose(args):
+    try:
+        result = compose_bundles_to_file(
+            args.bundle_paths,
+            core_input=args.core,
+            output_path=args.output,
+            canvas_width=args.canvas_width,
+            canvas_height=args.canvas_height,
+            layout_mode=args.layout,
+            audio_mode=args.audio,
+            audio_file=args.audio_file,
+            entry_fade_seconds=args.entry_fade_seconds,
+            background_color=args.background_color,
+            fps=args.fps,
+            codec=args.codec,
+            audio_codec=args.audio_codec,
+        )
+    except MaidoError as error:
+        print(json.dumps(error.to_dict(), indent=2))
+        return 2
+
+    render_result = result["render_result"]
+    print(
+        f"Created video: {render_result['output_path']} "
+        f"({render_result['clip_count']} clips)"
+    )
+    return 0
+
+
+
 def _build_center_argument(center_x, center_y):
     if center_x is None and center_y is None:
         return None
@@ -179,10 +291,12 @@ def _build_center_argument(center_x, center_y):
     return {"x": center_x, "y": center_y}
 
 
+
 def _build_dimensions_argument(width, height):
     if width is None and height is None:
         return None
     return {"width": width, "height": height}
+
 
 
 def _format_inspection_report(report):
