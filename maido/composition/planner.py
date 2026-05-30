@@ -1,6 +1,7 @@
 from ..crop import plan_crop_for_manifest
 from ..layout import plan_layout
 from ..security.errors import CompositionPlanError
+from ..sync import plan_sync
 
 
 
@@ -9,7 +10,8 @@ def plan_composition(
         core_input,
         canvas_width,
         canvas_height,
-        layout_mode="horizontal"):
+        layout_mode="horizontal",
+        entry_fade_seconds=0.0):
     normalized_clips = _normalize_composition_clips(clips)
     layout_clips = []
     for clip in normalized_clips:
@@ -20,6 +22,11 @@ def plan_composition(
             }
         )
 
+    sync_plan = plan_sync(
+        normalized_clips,
+        core_input=core_input,
+        entry_fade_seconds=entry_fade_seconds,
+    )
     layout_plan = plan_layout(
         layout_clips,
         core_input=core_input,
@@ -30,6 +37,10 @@ def plan_composition(
     clips_by_bundle_id = {}
     for clip in normalized_clips:
         clips_by_bundle_id[clip["bundle_id"]] = clip
+
+    sync_by_bundle_id = {}
+    for sync_entry in sync_plan["clips"]:
+        sync_by_bundle_id[sync_entry["bundle_id"]] = sync_entry
 
     planned_clips = []
     for layout_entry in layout_plan:
@@ -47,6 +58,7 @@ def plan_composition(
                 "role": layout_entry["role"],
                 "manifest": clip["manifest"],
                 "probe": clip["probe"],
+                "sync": sync_by_bundle_id[clip["bundle_id"]],
                 "layout": layout_entry,
                 "crop": crop_plan,
             }
@@ -58,6 +70,9 @@ def plan_composition(
         "canvas_width": float(canvas_width),
         "canvas_height": float(canvas_height),
         "clip_count": len(planned_clips),
+        "output_duration_seconds": sync_plan["output_duration_seconds"],
+        "output_sync_point_seconds": sync_plan["output_sync_point_seconds"],
+        "entry_fade_seconds": sync_plan["entry_fade_seconds"],
         "clips": planned_clips,
     }
 
