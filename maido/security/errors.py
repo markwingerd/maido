@@ -50,3 +50,7 @@ class SyncConflictError(MaidoError):
 
 class RenderPlanError(MaidoError):
     category = "render_plan_error"
+
+
+class RenderExecutionError(MaidoError):
+    category = "render_error"
