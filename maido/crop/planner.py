@@ -18,8 +18,6 @@ def plan_crop(
 
     lower_width = 0.0
     upper_width = min(source_width, source_height * target_aspect_ratio)
-    # print(f"{target_aspect_ratio=} = {cell_width=} / {cell_height=}")
-    # print(f"{upper_width=}= min({source_width=}, {source_height=} * {target_aspect_ratio=})")
 
     min_width = min_dimensions.get("width")
     min_height = min_dimensions.get("height")

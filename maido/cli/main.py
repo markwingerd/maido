@@ -157,6 +157,11 @@ def build_parser():
         default="aac",
         help="audio codec passed to MoviePy",
     )
+    compose_parser.add_argument(
+        "--overwrite-size",
+        action="store_true",
+        help="allow the planner to preserve the core minimum size even when the canvas is too small",
+    )
 
     return parser
 
@@ -269,6 +274,7 @@ def _run_compose(args):
             fps=args.fps,
             codec=args.codec,
             audio_codec=args.audio_codec,
+            allow_size_override=args.overwrite_size,
         )
     except MaidoError as error:
         print(json.dumps(error.to_dict(), indent=2))

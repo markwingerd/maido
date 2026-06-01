@@ -38,6 +38,7 @@ class CliComposeCommandTests(unittest.TestCase):
                         "mute",
                         "--entry-fade-seconds",
                         "0.2",
+                        "--overwrite-size",
                     ]
                 )
 

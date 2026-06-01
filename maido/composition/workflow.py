@@ -17,7 +17,7 @@ def compose_bundles_to_file(
         bundle_paths, core_input, output_path, canvas_width, canvas_height,
         layout_mode="horizontal", audio_mode="core", audio_file=None,
         entry_fade_seconds=0.0, background_color=None, fps=None,
-        codec="libx264", audio_codec="aac"):
+        codec="libx264", audio_codec="aac", allow_size_override=False):
     if not isinstance(bundle_paths, list) or len(bundle_paths) < 2:
         raise CompositionPlanError("compose requires at least two bundle paths")
 
@@ -54,6 +54,7 @@ def compose_bundles_to_file(
             canvas_height=canvas_height,
             layout_mode=layout_mode,
             entry_fade_seconds=entry_fade_seconds,
+            allow_size_override=allow_size_override,
         )
         render_plan = plan_render(
             composition_plan,

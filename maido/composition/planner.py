@@ -11,7 +11,8 @@ def plan_composition(
         canvas_width,
         canvas_height,
         layout_mode="horizontal",
-        entry_fade_seconds=0.0):
+        entry_fade_seconds=0.0,
+        allow_size_override=False):
     normalized_clips = _normalize_composition_clips(clips)
     layout_clips = []
     for clip in normalized_clips:
@@ -19,6 +20,8 @@ def plan_composition(
             {
                 "bundle_id": clip["bundle_id"],
                 "preferred_direction": clip["manifest"].get("preferred_direction"),
+                "min_dimensions": clip["manifest"].get("min_dimensions"),
+                "max_dimensions": clip["manifest"].get("max_dimensions"),
             }
         )
 
@@ -33,6 +36,7 @@ def plan_composition(
         layout_mode=layout_mode,
         canvas_width=canvas_width,
         canvas_height=canvas_height,
+        allow_size_override=allow_size_override,
     )
     clips_by_bundle_id = {}
     for clip in normalized_clips:

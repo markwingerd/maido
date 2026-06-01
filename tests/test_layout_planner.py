@@ -77,21 +77,90 @@ class LayoutPlannerTests(unittest.TestCase):
                 layout_mode="vertical",
             )
 
-    def test_layout_includes_horizontal_cell_geometry(self):
+    def test_layout_allocates_variable_horizontal_widths(self):
         result = plan_layout(
             [
-                {"bundle_id": "core"},
-                {"bundle_id": "other"},
+                {
+                    "bundle_id": "left",
+                    "min_dimensions": {"width": 240.0, "height": None},
+                    "max_dimensions": {"width": 288.0, "height": None},
+                },
+                {
+                    "bundle_id": "core",
+                    "min_dimensions": {"width": 640.0, "height": None},
+                },
+                {
+                    "bundle_id": "right",
+                    "min_dimensions": {"width": 240.0, "height": None},
+                    "max_dimensions": {"width": 288.0, "height": None},
+                },
+            ],
+            core_input=1,
+            layout_mode="horizontal",
+            canvas_width=1280,
+            canvas_height=720,
+        )
+
+        self.assertEqual(result[0]["cell_width"], 288.0)
+        self.assertEqual(result[1]["cell_width"], 704.0)
+        self.assertEqual(result[2]["cell_width"], 288.0)
+        self.assertEqual(result[1]["cell_x"], 288.0)
+
+    def test_layout_centers_unused_space_when_maximums_cannot_fill_canvas(self):
+        result = plan_layout(
+            [
+                {
+                    "bundle_id": "core",
+                    "max_dimensions": {"width": 300.0, "height": None},
+                },
+                {
+                    "bundle_id": "other",
+                    "max_dimensions": {"width": 200.0, "height": None},
+                },
             ],
             core_input=0,
             layout_mode="horizontal",
-            canvas_width=1920,
-            canvas_height=1080,
+            canvas_width=600,
+            canvas_height=300,
         )
 
-        self.assertEqual(result[0]["cell_width"], 960.0)
-        self.assertEqual(result[1]["cell_x"], 960.0)
-        self.assertEqual(result[1]["cell_height"], 1080.0)
+        self.assertEqual(result[0]["cell_width"], 300.0)
+        self.assertEqual(result[1]["cell_width"], 200.0)
+        self.assertEqual(result[0]["cell_x"], 50.0)
+        self.assertEqual(result[1]["cell_x"], 350.0)
+
+    def test_layout_rejects_combined_minimums_without_override(self):
+        with self.assertRaises(LayoutConflictError):
+            plan_layout(
+                [
+                    {"bundle_id": "core", "min_dimensions": {"width": 640.0, "height": None}},
+                    {"bundle_id": "other", "min_dimensions": {"width": 240.0, "height": None}},
+                    {"bundle_id": "other2", "min_dimensions": {"width": 240.0, "height": None}},
+                ],
+                core_input=0,
+                layout_mode="horizontal",
+                canvas_width=1000,
+                canvas_height=300,
+            )
+
+    def test_layout_override_keeps_core_minimum_and_shares_remaining_space(self):
+        result = plan_layout(
+            [
+                {"bundle_id": "core", "min_dimensions": {"width": 640.0, "height": None}},
+                {"bundle_id": "other", "min_dimensions": {"width": 240.0, "height": None}},
+                {"bundle_id": "other2", "min_dimensions": {"width": 240.0, "height": None}},
+            ],
+            core_input=0,
+            layout_mode="horizontal",
+            canvas_width=1000,
+            canvas_height=300,
+            allow_size_override=True,
+        )
+
+        self.assertEqual([entry["bundle_id"] for entry in result], ["other", "core", "other2"])
+        self.assertEqual(result[0]["cell_width"], 180.0)
+        self.assertEqual(result[1]["cell_width"], 640.0)
+        self.assertEqual(result[2]["cell_width"], 180.0)
 
     def test_layout_preserves_remaining_cli_order_after_preferred_assignment(self):
         result = plan_layout(
